@@ -11,6 +11,7 @@ const registrationInputB = require('./RegistrationProof/inputB.json')
 
 const mintProof = require('./MintProof/proof.json')
 const mintPublic = require('./MintProof/public.json')
+const mintInput = require('./MintProof/input.json')
 
 const transferProofA = require('./TransferProof/proofA.json')
 const transferPublicA = require('./TransferProof/publicA.json')
@@ -142,8 +143,6 @@ describe('zkToken', function () {
       mintPublic
     )
 
-    console.log(await zkToken.balanceOf(clientA.address))
-    /*
     expect(
       decryption(
         await zkToken.balanceOf(clientA.address),
@@ -152,7 +151,6 @@ describe('zkToken', function () {
         39229921n
       )
     ).to.eq(mintInput.value)
-    */
   })
 
   it('Revert self-transfer', async function () {
@@ -185,7 +183,15 @@ describe('zkToken', function () {
     expect(await zkToken.balanceOf(clientA.address)).to.eq(
       transferInputA.newEncryptedBalance
     )
-    console.log('Balance client B:', await zkToken.balanceOf(clientB.address))
+
+    expect(
+      decryption(
+        await zkToken.balanceOf(clientB.address),
+        17942993n,
+        8967090n,
+        15889415n
+      )
+    ).to.eq(transferInputA.value)
   })
 
   it('revert error registration', async function () {
@@ -204,3 +210,37 @@ describe('zkToken', function () {
       .withArgs('Wrong proof')
   })
 })
+
+// exponentiation modulo
+function pow(base, exp, mod) {
+  let res = 1n
+  while (exp != 0n) {
+    if ((exp & 1n) != 0n) {
+      res = BigInt(res * base) % mod
+    }
+    base = BigInt(base * base) % mod
+    exp >>= 1n
+  }
+  return res
+}
+
+// Paye cryptosystem
+function div(val, by) {
+  return BigInt((val - (val % by)) / by)
+}
+
+function L(u, n) {
+  return div(BigInt(u) - 1n, BigInt(n))
+}
+
+function encryption(g, m, r, n) {
+  return BigInt(BigInt(pow(g, m, n * n) * pow(r, n, n * n)) % BigInt(n * n))
+}
+
+function decryption(c, n, l, mu) {
+  return BigInt(
+    BigInt(
+      L(pow(BigInt(c), BigInt(l), BigInt(n * n)), BigInt(n)) * BigInt(mu)
+    ) % BigInt(n)
+  )
+}
