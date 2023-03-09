@@ -1,0 +1,10 @@
+{
+	"encryptedBalance": "1200609268986117",
+	"encryptedValue": "162720295355919",
+	"newEncryptedBalance": "2116042652408852",
+	"senderBalance": "10",
+	"value": "5",
+	"r": "42635574",
+	"senderPubKey": ["2057523913923961","41369829","46783589"],
+	"reciverPubKey": ["166264138339702","5684191","17942993"]
+}
