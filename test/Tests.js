@@ -17,6 +17,10 @@ const transferProofA = require('./TransferProof/proofA.json')
 const transferPublicA = require('./TransferProof/publicA.json')
 const transferInputA = require('./TransferProof/inputA.json')
 
+const transferProofB = require('./TransferProof/proofB.json')
+const transferPublicB = require('./TransferProof/publicB.json')
+const transferInputB = require('./TransferProof/inputB.json')
+
 describe('zkToken', function () {
   let zkToken,
     registrationVerifier,
@@ -192,6 +196,34 @@ describe('zkToken', function () {
         15889415n
       )
     ).to.eq(transferInputA.value)
+
+    console.log('Client B balance =', await zkToken.balanceOf(clientB.address))
+  })
+
+  it('Transfer B to A', async function () {
+    await zkToken.connect(clientB).transfer(
+      clientA.address,
+      [transferProofB.pi_a[0], transferProofB.pi_a[1]],
+      [
+        [transferProofB.pi_b[0][1], transferProofB.pi_b[0][0]],
+        [transferProofB.pi_b[1][1], transferProofB.pi_b[1][0]],
+      ],
+      [transferProofB.pi_c[0], transferProofB.pi_c[1]],
+      transferPublicB
+    )
+
+    expect(await zkToken.balanceOf(clientB.address)).to.eq(
+      transferInputB.newEncryptedBalance
+    )
+
+    expect(
+      decryption(
+        await zkToken.balanceOf(clientA.address),
+        46783589n,
+        11692464n,
+        39229921n
+      )
+    ).to.eq(BigInt(transferInputB.value) + 5n) // 5 - old balance
   })
 
   it('revert error registration', async function () {

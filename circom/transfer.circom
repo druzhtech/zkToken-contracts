@@ -6,31 +6,28 @@ template Main() {
     signal input encryptedBalance;
 	signal input encryptedValue;
 	signal input newEncryptedBalance;
-    signal input senderBalance;
 	signal input value;
-	// old r
-	signal input r;
-	// PubKey = g, r, n
+
+	// PubKey = g, rand r, n
 	signal input senderPubKey[3];
 	signal input reciverPubKey[3];
+	// l mu n
+	signal input senderPrivKey[3];
+
+	// checking that the sender knows his balance and it is correct, you need to know r
+
+	// deciphering the old balance 
+	component pow1 = Binpower();
+	
+
+	pow1.b <== encryptedBalance;
+	pow1.e <== senderPrivKey[0];
+	pow1.modulo <== senderPrivKey[2] * senderPrivKey[2];
+
+	signal senderBalance <-- (pow1.out - 1) / senderPrivKey[2] * senderPrivKey[1] % senderPrivKey[2];
 
 	// checking that the current balance is greater than the payment amount
 	assert(senderBalance >= value);
-
-	// checking that the sender knows his balance and it is correct, you need to know r
-	component pow1 = Binpower();
-	component pow2 = Binpower();
-
-	pow1.b <== senderPubKey[0];
-	pow1.e <== senderBalance;
-	pow1.modulo <== senderPubKey[2] * senderPubKey[2];
-
-	pow2.b <== r;
-	pow2.e <== senderPubKey[2];
-	pow2.modulo <== senderPubKey[2] * senderPubKey[2];
-
-	signal enBalance <-- (pow1.out * pow2.out) % (senderPubKey[2] * senderPubKey[2]);
-	encryptedBalance === enBalance;
 
 	// payment encryption check
 	component pow3 = Binpower();

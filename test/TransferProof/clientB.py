@@ -44,15 +44,13 @@ def main():
     l = 8967090
     mu = 15889415
     print("private key n =", n, "g =", g)
-    print("public key", l, mu)
+    print("public key l=", l, "mu =", mu)
     # random open text
-    m = 5
+    m = 3
     print("open text", m)
     r = random.randint(0, n - 1)
-    # r = 13620829
     print("r =", r)
     c = encryption(g, m, r, n)
-    #c = 225038593180971 # 5
     print("encrypted number", c)
     m1 = decryption(c, n, l, mu)
     if (m == m1):

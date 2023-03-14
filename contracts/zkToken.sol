@@ -41,8 +41,13 @@ contract zkToken {
         mintVerifierAddr = IVerifier(_mintVerifierAddr);
     }
 
+   
     function balanceOf(address _to) external view returns (uint256) {
         return users[_to].encryptedBalance;
+    }
+
+    function getPubKey(address _to) external view returns (Key memory) {
+        return users[_to].key;
     }
 
     /* onlyFee */

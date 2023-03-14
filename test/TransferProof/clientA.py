@@ -44,15 +44,11 @@ def main():
     l = 11692464
     mu = 39229921
     print("private key n =", n, "g =", g)
-    print("public key", l, mu)
+    print("public key l =", l, "mu =" , mu)
     # random open text
-    m = 5
+    m = 2
     print("open text", m)
     r = random.randint(0, n - 1)
-    # old r mint
-    # r = 42635574
-    # old r transfer A to B
-    # r = 41369829
     print("r =", r)
     c = encryption(g, m, r, n)
     print("encrypted number", c)
