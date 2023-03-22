@@ -27,12 +27,13 @@ describe('zkToken', function () {
     transferVerifier,
     mintVerifier,
     clientA,
-    clientB
+    clientB,
+    clientC
 
   const fee = ethers.utils.parseUnits('0.001', 'ether')
 
   before(async function () {
-    ;[clientA, clientB] = await ethers.getSigners()
+    ;[clientA, clientB, clientC] = await ethers.getSigners()
 
     const RegistrationVerifier = await hre.ethers.getContractFactory(
       'RegistrationVerifier'
@@ -169,7 +170,7 @@ describe('zkToken', function () {
         [transferProofA.pi_c[0], transferProofA.pi_c[1]],
         transferPublicA
       )
-    ).to.be.revertedWith('you cannot send money to yourself')
+    ).to.be.revertedWith('you cannot send tokens to yourself')
   })
 
   it('Transfer A to B', async function () {
@@ -240,6 +241,20 @@ describe('zkToken', function () {
     )
       .to.be.revertedWithCustomError(zkToken, 'WrongProof')
       .withArgs('Wrong proof')
+  })
+  it('onlyRegistered modifier', async function () {
+    await expect(
+      zkToken.connect(clientB).transfer(
+        clientC.address,
+        [transferProofB.pi_a[0], transferProofB.pi_a[1]],
+        [
+          [transferProofB.pi_b[0][1], transferProofB.pi_b[0][0]],
+          [transferProofB.pi_b[1][1], transferProofB.pi_b[1][0]],
+        ],
+        [transferProofB.pi_c[0], transferProofB.pi_c[1]],
+        transferPublicB
+      )
+    ).to.be.revertedWith('user not registered')
   })
 })
 

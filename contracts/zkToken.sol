@@ -3,6 +3,8 @@ pragma solidity ^0.8.17;
 
 import "./IVerifier.sol";
 
+/// @title zkToken
+
 contract zkToken {
     string public name = "zkToken";
     string public symbol = "ZKT";
@@ -41,7 +43,9 @@ contract zkToken {
         mintVerifierAddr = IVerifier(_mintVerifierAddr);
     }
 
-   
+    /// @notice Getting a user's balance
+    /// @param _to user address
+    /// @return encryptedBalance encrypted balance
     function balanceOf(address _to) external view returns (uint256) {
         return users[_to].encryptedBalance;
     }
@@ -82,8 +86,9 @@ contract zkToken {
         uint[2][2] memory b,
         uint[2] memory c,
         uint /*4*/[] memory input
-    ) external {
+    ) external onlyRegistered(_to) {
         require(_to != address(0), "zero address");
+        
         bool mintProofIsCorrect = mintVerifierAddr.verifyProof(a, b, c, input);
         if (mintProofIsCorrect) {
             users[_to].encryptedBalance =
@@ -99,12 +104,9 @@ contract zkToken {
         uint[2][2] memory b,
         uint[2] memory c,
         uint /*9*/[] memory input
-    ) external payable /* onlyFee */ {
-        require(msg.sender != _to, "you cannot send money to yourself");
+    ) external payable /* onlyFee */ onlyRegistered(_to) {
+        require(msg.sender != _to, "you cannot send tokens to yourself");
         require(_to != address(0), "zero address");
-        User storage user = users[_to];
-        require(user.encryptedBalance != 0, "user not registered");
-        require(user.key.g >= 0 && user.key.n >= 0, "invalid key value");
 
         bool transferProofIsCorrect = transferVerifierAddr.verifyProof(
             a,
@@ -125,6 +127,11 @@ contract zkToken {
 
     modifier onlyFee() {
         require(msg.value >= 0.001 ether, "Not enough fee!");
+        _;
+    }
+
+    modifier onlyRegistered(address _to) {
+        require(users[_to].encryptedBalance != 0, "user not registered");
         _;
     }
 }
