@@ -87,7 +87,7 @@ contract zkToken {
         uint[2][2] memory b,
         uint[2] memory c,
         uint /*6*/[] memory input
-    ) external onlyRegistered(_to) {
+    ) external payable /* onlyFee */  onlyRegistered(_to) {
         require(_to != address(0), "zero address");
 
         // defense against false evidence
