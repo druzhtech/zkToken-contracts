@@ -118,6 +118,11 @@ describe('zkToken', function () {
     expect(await zkToken.balanceOf(clientA.address)).to.eq(
       registrationInputA.encryptedBalance
     )
+
+    console.log(
+      'Client A balance after registration',
+      await zkToken.balanceOf(clientA.address)
+    )
   })
 
   it('registration B', async function () {
@@ -133,6 +138,11 @@ describe('zkToken', function () {
 
     expect(await zkToken.balanceOf(clientB.address)).to.eq(
       registrationInputB.encryptedBalance
+    )
+
+    console.log(
+      'Client B balance after registration',
+      await zkToken.balanceOf(clientB.address)
     )
   })
 
@@ -156,6 +166,11 @@ describe('zkToken', function () {
         39229921n
       )
     ).to.eq(mintInput.value)
+
+    console.log(
+      'Client A balance after mint',
+      await zkToken.balanceOf(clientA.address)
+    )
   })
 
   it('Revert self-transfer', async function () {
@@ -186,7 +201,7 @@ describe('zkToken', function () {
     )
 
     expect(await zkToken.balanceOf(clientA.address)).to.eq(
-      transferInputA.newEncryptedBalance
+      transferInputA.newEncryptedSenderBalance
     )
 
     expect(
@@ -198,7 +213,15 @@ describe('zkToken', function () {
       )
     ).to.eq(transferInputA.value)
 
-    console.log('Client B balance =', await zkToken.balanceOf(clientB.address))
+    console.log(
+      'Client A balance after transfer A to B',
+      await zkToken.balanceOf(clientA.address)
+    )
+
+    console.log(
+      'Client B balance after transfer A to B',
+      await zkToken.balanceOf(clientB.address)
+    )
   })
 
   it('Transfer B to A', async function () {
@@ -214,7 +237,7 @@ describe('zkToken', function () {
     )
 
     expect(await zkToken.balanceOf(clientB.address)).to.eq(
-      transferInputB.newEncryptedBalance
+      transferInputB.newEncryptedSenderBalance
     )
 
     expect(
@@ -225,11 +248,21 @@ describe('zkToken', function () {
         39229921n
       )
     ).to.eq(BigInt(transferInputB.value) + 5n) // 5 - old balance
+
+    console.log(
+      'Client A balance after transfer B to A',
+      await zkToken.balanceOf(clientA.address)
+    )
+
+    console.log(
+      'Client B balance after transfer B to A',
+      await zkToken.balanceOf(clientB.address)
+    )
   })
 
   it('revert error registration', async function () {
     await expect(
-      zkToken.connect(clientA).registration(
+      zkToken.connect(clientC).registration(
         [transferProofA.pi_a[0], transferProofA.pi_a[1]],
         [
           [transferProofA.pi_b[0][1], transferProofA.pi_b[0][0]],
@@ -242,19 +275,19 @@ describe('zkToken', function () {
       .to.be.revertedWithCustomError(zkToken, 'WrongProof')
       .withArgs('Wrong proof')
   })
+
   it('onlyRegistered modifier', async function () {
     await expect(
-      zkToken.connect(clientB).transfer(
-        clientC.address,
-        [transferProofB.pi_a[0], transferProofB.pi_a[1]],
+      zkToken.connect(clientA).registration(
+        [transferProofA.pi_a[0], transferProofA.pi_a[1]],
         [
-          [transferProofB.pi_b[0][1], transferProofB.pi_b[0][0]],
-          [transferProofB.pi_b[1][1], transferProofB.pi_b[1][0]],
+          [transferProofA.pi_b[0][1], transferProofA.pi_b[0][0]],
+          [transferProofA.pi_b[1][1], transferProofA.pi_b[1][0]],
         ],
-        [transferProofB.pi_c[0], transferProofB.pi_c[1]],
-        transferPublicB
+        [transferProofA.pi_c[0], transferProofA.pi_c[1]],
+        registrationPublicA
       )
-    ).to.be.revertedWith('user not registered')
+    ).to.be.revertedWith('you are registered')
   })
 })
 

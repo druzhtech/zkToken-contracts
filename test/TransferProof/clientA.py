@@ -46,7 +46,7 @@ def main():
     print("private key n =", n, "g =", g)
     print("public key l =", l, "mu =" , mu)
     # random open text
-    m = 2
+    m = 10
     print("open text", m)
     r = random.randint(0, n - 1)
     print("r =", r)

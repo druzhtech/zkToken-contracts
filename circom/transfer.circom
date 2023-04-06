@@ -3,9 +3,10 @@ pragma circom 2.1.3;
 include "binpower.circom";
 
 template Main() {
-    signal input encryptedBalance;
+    signal input encryptedSenderBalance;
+	signal input newEncryptedSenderBalance;
+
 	signal input encryptedValue;
-	signal input newEncryptedBalance;
 	signal input value;
 
 	// PubKey = g, rand r, n
@@ -14,13 +15,16 @@ template Main() {
 	// l mu n
 	signal input senderPrivKey[3];
 
-	// checking that the sender knows his balance and it is correct, you need to know r
+	signal input encryptedReciverBalance;
+	signal input newEncryptedReciverBalance;
 
-	// deciphering the old balance 
+	// value cannot be negative
+	assert(value > 0);
+
+	// deciphering the old sender balance 
 	component pow1 = Binpower();
 	
-
-	pow1.b <== encryptedBalance;
+	pow1.b <== encryptedSenderBalance;
 	pow1.e <== senderPrivKey[0];
 	pow1.modulo <== senderPrivKey[2] * senderPrivKey[2];
 
@@ -56,16 +60,22 @@ template Main() {
 	pow6.e <== senderPubKey[2];
 	pow6.modulo <== senderPubKey[2] * senderPubKey[2];
 
-	signal enNewBalance <-- (pow5.out * pow6.out) % (senderPubKey[2] * senderPubKey[2]);
-	newEncryptedBalance === enNewBalance;
+	signal enNewEncryptedSenderBalance <-- (pow5.out * pow6.out) % (senderPubKey[2] * senderPubKey[2]);
+	newEncryptedSenderBalance === enNewEncryptedSenderBalance;
+
+	// verification of the correctly calculated new balance of the recipient
+	signal enNewEncryptedReciverBalance <-- (encryptedReciverBalance * encryptedValue) % (reciverPubKey[2] * reciverPubKey[2]);
+
+	newEncryptedReciverBalance === enNewEncryptedReciverBalance;
 }
 
 // public data
 component main {
-		public [encryptedBalance, 	// in storage
-				encryptedValue,		// sender calculates + send to transfer function
-				newEncryptedBalance,// sender calculates + send to storage
-				reciverPubKey, 		// in storage + rand r
-				senderPubKey]		// in storage + rand r
+		public [encryptedSenderBalance, 	// in storage
+				newEncryptedSenderBalance,	// sender calculates 
+				encryptedValue,				// sender calculates
+				senderPubKey, 				// in storage + rand r
+				reciverPubKey,				// in storage + rand r
+				encryptedReciverBalance,	// in storage
+				newEncryptedReciverBalance]	// sender calculates
 				} = Main();
-

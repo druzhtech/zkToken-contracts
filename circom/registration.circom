@@ -8,6 +8,7 @@ template Main() {
 	// PubKey = g, r, n
 	signal input pubKey[3];
 
+	// проверка того, что баланс равен нулю
 	balance === 0;
 	
 	// checking that the sender knows his balance and it is correct, you need to know r
