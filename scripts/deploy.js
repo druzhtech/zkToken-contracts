@@ -8,7 +8,7 @@ async function main() {
   await registrationVerifier.deployed()
 
   console.log('RegistrationVerifier address:', registrationVerifier.address)
-  /*
+
   const TransferVerifier = await hre.ethers.getContractFactory(
     'TransferVerifier'
   )
@@ -32,7 +32,6 @@ async function main() {
   await zkToken.deployed()
 
   console.log('zkToken address:', zkToken.address)
-  */
 }
 
 main().catch((error) => {
