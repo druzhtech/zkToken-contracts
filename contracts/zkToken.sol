@@ -17,6 +17,7 @@ contract zkToken {
     struct Key {
         uint256 g;
         uint256 n;
+        uint256 powN2;
     }
 
     struct User {
@@ -73,10 +74,13 @@ contract zkToken {
             input
         );
 
+        User storage user = users[msg.sender];
+
         if (registrationProofIsCorrect) {
-            users[msg.sender].encryptedBalance = input[0];
-            users[msg.sender].key.g = input[1];
-            users[msg.sender].key.n = input[3];
+            user.encryptedBalance = input[0];
+            user.key.g = input[1];
+            user.key.n = input[3];
+            user.key.powN2 = input[3] * input[3];
             emit Registration(msg.sender);
         } else revert WrongProof("Wrong proof");
     }
@@ -86,16 +90,19 @@ contract zkToken {
         uint[2] memory a,
         uint[2][2] memory b,
         uint[2] memory c,
-        uint /*6*/[] memory input
-    ) external payable /* onlyFee */  onlyRegistered(_to) {
-        require(_to != address(0), "zero address");
-
-        // defense against false evidence
-        input[4] = users[_to].encryptedBalance;
-
+        uint /*1*/[] memory input
+    ) external onlyRegistered(_to) zeroAddress(_to) {
         bool mintProofIsCorrect = mintVerifierAddr.verifyProof(a, b, c, input);
+
+        User storage user = users[_to];
+
         if (mintProofIsCorrect) {
-            users[_to].encryptedBalance = input[5];
+            unchecked {
+                user.encryptedBalance =
+                    (user.encryptedBalance * input[0]) %
+                    user.key.powN2;
+            }
+
             emit Mint(_to);
         } else revert WrongProof("Wrong proof");
     }
@@ -105,14 +112,14 @@ contract zkToken {
         uint[2] memory a,
         uint[2][2] memory b,
         uint[2] memory c,
-        uint /*11*/[] memory input
-    ) external payable /* onlyFee */ onlyRegistered(_to) {
+        uint /*3*/[] memory input
+    ) external payable /* onlyFee */ onlyRegistered(_to) zeroAddress(_to) {
         require(msg.sender != _to, "you cannot send tokens to yourself");
-        require(_to != address(0), "zero address");
 
-        // defense against false evidence
-        input[0] = users[msg.sender].encryptedBalance;
-        input[9] = users[_to].encryptedBalance;
+        User storage receiver = users[_to];
+        User storage sender = users[msg.sender];
+        
+        input[0] = sender.encryptedBalance;
 
         bool transferProofIsCorrect = transferVerifierAddr.verifyProof(
             a,
@@ -122,19 +129,32 @@ contract zkToken {
         );
 
         if (transferProofIsCorrect) {
-            users[_to].encryptedBalance = input[10];
-            users[msg.sender].encryptedBalance = input[1];
+            unchecked {
+                receiver.encryptedBalance =
+                    (receiver.encryptedBalance * input[2]) %
+                    receiver.key.powN2;
+
+                sender.encryptedBalance =
+                    (sender.encryptedBalance * input[1]) %
+                    sender.key.powN2;
+            }
             emit Transfer(_to);
         } else revert WrongProof("Wrong proof");
     }
 
+/*
     modifier onlyFee() {
         require(msg.value >= 0.001 ether, "Not enough fee!");
         _;
     }
+*/
+    modifier onlyRegistered(address _to) {
+        require(users[_to].encryptedBalance != 0, "user not registered");
+        _;
+    }
 
-    modifier onlyRegistered(address _addr) {
-        require(users[_addr].encryptedBalance != 0, "user not registered");
+    modifier zeroAddress(address _to) {
+        require(_to != address(0), "Zero address");
         _;
     }
 }

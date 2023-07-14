@@ -1,17 +1,28 @@
 {
   "name": "hardhat-project",
   "devDependencies": {
-    "@nomicfoundation/hardhat-chai-matchers": "^1.0.6",
-    "@nomicfoundation/hardhat-network-helpers": "^1.0.8",
     "@nomicfoundation/hardhat-toolbox": "^2.0.2",
-    "@nomiclabs/hardhat-ethers": "^2.2.3",
-    "@nomiclabs/hardhat-etherscan": "^3.1.7",
-    "chai": "^4.3.7",
-    "hardhat": "^2.13.0",
+    "hardhat": "^2.14.0",
+    "hardhat-abi-exporter": "^2.10.1",
     "prettier": "^2.8.4",
     "prettier-plugin-solidity": "^1.1.3"
   },
   "dependencies": {
-    "dotenv": "^16.0.3"
+    "@openzeppelin/contracts": "^4.9.1",
+    "axios": "^1.4.0",
+    "child_process": "^1.0.2",
+    "dotenv": "^16.0.3",
+    "ethers": "^5.0.0",
+    "fs": "^0.0.1-security",
+    "paillier-bigint": "^3.4.3"
+  },
+  "scripts": {
+    "inputs": "hardhat run scripts/inputs.js",
+    "reg:proofA": "node test/registrationProof/generate_witness.js test/registrationProof/registration.wasm test/inputs/regInputA.json test/registrationProof/witnessA.wtns && snarkjs groth16 prove test/registrationProof/registration_0001.zkey test/registrationProof/witnessA.wtns test/registrationProof/proofA.json test/registrationProof/publicA.json && snarkjs groth16 verify test/registrationProof/verification_key.json test/registrationProof/publicA.json test/registrationProof/proofA.json",
+    "reg:proofB": "node test/registrationProof/generate_witness.js test/registrationProof/registration.wasm test/inputs/regInputB.json test/registrationProof/witnessB.wtns && snarkjs groth16 prove test/registrationProof/registration_0001.zkey test/registrationProof/witnessB.wtns test/registrationProof/proofB.json test/registrationProof/publicB.json && snarkjs groth16 verify test/registrationProof/verification_key.json test/registrationProof/publicB.json test/registrationProof/proofB.json",
+    "mint:proofA": "node test/mintProof/generate_witness.js test/mintProof/mint.wasm test/inputs/mintInputA.json test/mintProof/witness.wtns && snarkjs groth16 prove test/mintProof/mint_0001.zkey test/mintProof/witness.wtns test/mintProof/proof.json test/mintProof/public.json && snarkjs groth16 verify test/mintProof/verification_key.json test/mintProof/public.json test/mintProof/proof.json",
+    "transfer:proofA": "node test/transferProof/generate_witness.js test/transferProof/transfer.wasm test/inputs/transferInputA.json test/transferProof/witnessAtoB.wtns && snarkjs groth16 prove test/transferProof/transfer_0001.zkey test/transferProof/witnessAtoB.wtns test/transferProof/proofAtoB.json test/transferProof/publicAtoB.json && snarkjs groth16 verify test/transferProof/verification_key.json test/transferProof/publicAtoB.json test/transferProof/proofAtoB.json",
+    "proofs": "npm run reg:proofA && npm run reg:proofB && npm run mint:proofA && npm run transfer:proofA",
+    "siberiumTest": "node ./scripts/siberiumTest.js"
   }
 }

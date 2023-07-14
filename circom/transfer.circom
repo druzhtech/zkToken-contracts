@@ -1,27 +1,24 @@
-pragma circom 2.1.3;
+pragma circom 2.1.5;
 
 include "binpower.circom";
 
 template Main() {
-    signal input encryptedSenderBalance;
-	signal input newEncryptedSenderBalance;
-
-	signal input encryptedValue;
+	signal input encryptedSenderBalance;
+	signal input encryptedSenderValue;
+	signal input encryptedReceiverValue;
 	signal input value;
 
-	// PubKey = g, rand r, n
+	// public key: g, rand r, n
 	signal input senderPubKey[3];
-	signal input reciverPubKey[3];
-	// l mu n
+	signal input receiverPubKey[3];
+	
+	// private key: l, mu, n
 	signal input senderPrivKey[3];
-
-	signal input encryptedReciverBalance;
-	signal input newEncryptedReciverBalance;
-
+	
 	// value cannot be negative
 	assert(value > 0);
-
-	// deciphering the old sender balance 
+	
+	// deciphering the current sender balance 
 	component pow1 = Binpower();
 	
 	pow1.b <== encryptedSenderBalance;
@@ -30,52 +27,43 @@ template Main() {
 
 	signal senderBalance <-- (pow1.out - 1) / senderPrivKey[2] * senderPrivKey[1] % senderPrivKey[2];
 
-	// checking that the current balance is greater than the payment amount
+	// checking that the current sender balance is greater than the payment amount
 	assert(senderBalance >= value);
-
-	// payment encryption check
+	
+	// checking the value encryption for the receiver
 	component pow3 = Binpower();
 	component pow4 = Binpower();
 
-	pow3.b <== reciverPubKey[0];
+	pow3.b <== receiverPubKey[0];
 	pow3.e <== value;
-	pow3.modulo <== reciverPubKey[2] * reciverPubKey[2];
+	pow3.modulo <== receiverPubKey[2] * receiverPubKey[2];
 
-	pow4.b <== reciverPubKey[1];
-	pow4.e <== reciverPubKey[2];
-	pow4.modulo <== reciverPubKey[2] * reciverPubKey[2];
+	pow4.b <== receiverPubKey[1];
+	pow4.e <== receiverPubKey[2];
+	pow4.modulo <== receiverPubKey[2] * receiverPubKey[2];
 
-	signal enValue <-- (pow3.out * pow4.out) % (reciverPubKey[2] * reciverPubKey[2]);
-	encryptedValue === enValue;
-
-	// checking the correctness of the new balance
+	signal enReceiverValue <-- (pow3.out * pow4.out) % (receiverPubKey[2] * receiverPubKey[2]);
+	encryptedReceiverValue === enReceiverValue;
+	
+	// checking the value encryption for the sender
 	component pow5 = Binpower();
 	component pow6 = Binpower();
 
 	pow5.b <== senderPubKey[0];
-	pow5.e <== senderBalance - value;
+	pow5.e <== senderPubKey[2] - value;
 	pow5.modulo <== senderPubKey[2] * senderPubKey[2];
 
 	pow6.b <== senderPubKey[1];
 	pow6.e <== senderPubKey[2];
 	pow6.modulo <== senderPubKey[2] * senderPubKey[2];
 
-	signal enNewEncryptedSenderBalance <-- (pow5.out * pow6.out) % (senderPubKey[2] * senderPubKey[2]);
-	newEncryptedSenderBalance === enNewEncryptedSenderBalance;
-
-	// verification of the correctly calculated new balance of the recipient
-	signal enNewEncryptedReciverBalance <-- (encryptedReciverBalance * encryptedValue) % (reciverPubKey[2] * reciverPubKey[2]);
-
-	newEncryptedReciverBalance === enNewEncryptedReciverBalance;
+	signal enSenderValue <-- (pow5.out * pow6.out) % (senderPubKey[2] * senderPubKey[2]);
+	encryptedSenderValue === enSenderValue;
 }
 
 // public data
 component main {
-		public [encryptedSenderBalance, 	// in storage
-				newEncryptedSenderBalance,	// sender calculates 
-				encryptedValue,				// sender calculates
-				senderPubKey, 				// in storage + rand r
-				reciverPubKey,				// in storage + rand r
-				encryptedReciverBalance,	// in storage
-				newEncryptedReciverBalance]	// sender calculates
+		public [encryptedSenderBalance,		// in storage
+				encryptedSenderValue, 		// sender calculates + send to transfer function
+				encryptedReceiverValue]		// sender calculates + send to transfer function	
 				} = Main();

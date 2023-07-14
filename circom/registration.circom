@@ -1,16 +1,15 @@
-pragma circom 2.1.3;
+pragma circom 2.1.5;
 
 include "binpower.circom";
 
 template Main() {
     signal input encryptedBalance;
 	signal input balance;
-	// PubKey = g, r, n
+	// public key: g, rand r, n
 	signal input pubKey[3];
-
-	// проверка того, что баланс равен нулю
-	balance === 0;
 	
+	balance === 0;
+
 	// checking that the sender knows his balance and it is correct, you need to know r
 	component pow1 = Binpower();
 	component pow2 = Binpower();
@@ -30,6 +29,6 @@ template Main() {
 // public data
 component main {
 		public [encryptedBalance, 	// encrypted 0
-				pubKey]				// in storage + rand r
+				pubKey]				// to storage + rand r
 				} = Main();
 
